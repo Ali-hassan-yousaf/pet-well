@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 
 const Community = () => {
@@ -9,22 +8,35 @@ const Community = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [posts, setPosts] = useState([]);
+  const [error, setError] = useState(null);
+
+  const API_URL = "https://pet-well.vercel.app/api/items";
+
+  const fetchPosts = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(API_URL);
+      if (!response.ok) throw new Error('Failed to fetch posts');
+      const data = await response.json();
+      setPosts(data.filter(post => post.status === 'approved'));
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+      setError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch('/api/items');
-        const data = await response.json();
-        setPosts(data.filter(post => post.status === 'approved'));
-      } catch (error) {
-        console.error("Error fetching posts:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchPosts();
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   const handleImageSelect = (e) => {
     const file = e.target.files?.[0];
@@ -37,6 +49,7 @@ const Community = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
     
     try {
       const formData = new FormData();
@@ -44,12 +57,17 @@ const Community = () => {
       formData.append('content', content);
       if (postImage) formData.append('image', postImage);
 
-      await fetch('/api/items', {
+      const response = await fetch(API_URL, {
         method: 'POST',
         body: formData
       });
 
-      // Reset form
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Submission failed');
+      }
+
+      await fetchPosts();
       setTitle("");
       setContent("");
       setPostImage(null);
@@ -57,49 +75,29 @@ const Community = () => {
 
     } catch (error) {
       console.error("Submission error:", error);
+      setError(error.message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div>
-      <header>Community Header</header>
+    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+      <header style={{ textAlign: 'center', marginBottom: '40px' }}>
+        <h1>PetWell Community</h1>
+      </header>
 
       <main>
-        <h1>Community Posts</h1>
-        
-        <section>
-          <h2>Posts</h2>
-          {isLoading ? (
-            <div>Loading posts...</div>
-          ) : posts.length > 0 ? (
-            posts.map(post => (
-              <div key={post._id}>
-                <h3>{post.title}</h3>
-                <p>By {post.author}</p>
-                <p>{post.content}</p>
-                {post.image_url && <img src={post.image_url} alt="Post" />}
-                <div>
-                  <span>Likes: {post.likes}</span>
-                  <span>Comments: {post.comments}</span>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div>No posts found</div>
-          )}
-        </section>
-
-        <section>
-          <h2>Create Post</h2>
-          <form onSubmit={handleSubmit}>
+        <section style={{ marginBottom: '40px' }}>
+          <h2>Create New Post</h2>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <div>
               <label>Title:</label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
+                style={{ width: '100%', padding: '8px' }}
               />
             </div>
             
@@ -109,6 +107,7 @@ const Community = () => {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 required
+                style={{ width: '100%', padding: '8px', minHeight: '100px' }}
               />
             </div>
 
@@ -118,18 +117,80 @@ const Community = () => {
                 type="file"
                 accept="image/*"
                 onChange={handleImageSelect}
+                style={{ marginTop: '5px' }}
               />
-              {previewUrl && <img src={previewUrl} alt="Preview" />}
+              {previewUrl && (
+                <img 
+                  src={previewUrl} 
+                  alt="Preview" 
+                  style={{ maxWidth: '200px', marginTop: '10px' }}
+                />
+              )}
             </div>
 
-            <button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Submitting...' : 'Submit'}
+            {error && <div style={{ color: 'red' }}>{error}</div>}
+
+            <button 
+              type="submit" 
+              disabled={isSubmitting}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: isSubmitting ? '#ccc' : '#007bff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit Post'}
             </button>
           </form>
         </section>
+
+        <section>
+          <h2>Community Posts</h2>
+          {isLoading ? (
+            <div style={{ textAlign: 'center', padding: '20px' }}>Loading posts...</div>
+          ) : error ? (
+            <div style={{ color: 'red', textAlign: 'center' }}>{error}</div>
+          ) : posts.length > 0 ? (
+            posts.map(post => (
+              <article 
+                key={post._id}
+                style={{
+                  marginBottom: '30px',
+                  padding: '20px',
+                  border: '1px solid #ddd',
+                  borderRadius: '8px'
+                }}
+              >
+                <h3 style={{ marginBottom: '10px' }}>{post.title}</h3>
+                <p style={{ color: '#666', marginBottom: '8px' }}>
+                  Posted by {post.author?.name || 'Anonymous'}
+                </p>
+                <p style={{ marginBottom: '15px' }}>{post.content}</p>
+                {post.imageUrl && (
+                  <img 
+                    src={post.imageUrl} 
+                    alt="Post" 
+                    style={{ maxWidth: '300px', marginBottom: '15px' }}
+                  />
+                )}
+                <div style={{ display: 'flex', gap: '15px', color: '#666' }}>
+                  <span>❤️ {post.likes || 0} Likes</span>
+                  <span>💬 {post.comments?.length || 0} Comments</span>
+                </div>
+              </article>
+            ))
+          ) : (
+            <div style={{ textAlign: 'center', padding: '20px' }}>No posts found</div>
+          )}
+        </section>
       </main>
 
-      <footer>Community Footer</footer>
+      <footer style={{ textAlign: 'center', marginTop: '40px', padding: '20px' }}>
+        <p>© 2024 PetWell Community. All rights reserved.</p>
+      </footer>
     </div>
   );
 };
