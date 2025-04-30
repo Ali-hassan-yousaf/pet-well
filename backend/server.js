@@ -17,18 +17,7 @@ const port = process.env.PORT;
 // Allowing multiple origins in CORS configuration
 const corsOptions = {
   origin: [
-    "https://voguedeploy-jtu2.vercel.app", // Allow this origin
-    "https://voguedeploy.vercel.app",      // Also allow this origin
-    "https://voguedeploy-x6fj-2mw7edzh5-hassans-projects-875553d4.vercel.app",
-    "'https://voguedeploy-eyro.vercel.app'",
-    "https://voguedeploy-mh48.vercel.app",
-    "https://voguedeploy-e8ar.vercel.app",
-    "https://voguedeploy-mh48-rfsqtx5ra-hassans-projects-875553d4.vercel.app",
-    "https://voguedeploy-vz9u.vercel.app",
-    "https://voguedeploy-q2qv.vercel.app",
-    "https://voguedeploy-q2qv-qdrqnhhep-hassans-projects-875553d4.vercel.app",
-    "https://voguedeploy-ts4s.vercel.app",
-    "https://voguedeploy-56zz.vercel.app"
+    "https://pet-well-6436.vercel.app"
   ],
   methods: ["POST", "GET", "PUT", "DELETE"],
   credentials: true,
