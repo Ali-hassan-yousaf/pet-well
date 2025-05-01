@@ -133,15 +133,11 @@ app.delete("/api/items/:id", async (req, res) => {
 app.post("/api/posts", async (req, res) => {
   try {
     const { title, content, image } = req.body;
-
-    // Use a fixed user (you can replace this later)
-    const hardcodedUserId = "662f4c97d8792a640bdfc3cc"; // Replace with valid ObjectId from your DB
+    const hardcodedUserId = "662f4c97d8792a640bdfc3cc"; // Hardcoded for now, replace with a valid ID
 
     let imageUrl = '';
     if (image) {
-      const result = await cloudinary.v2.uploader.upload(image, {
-        folder: 'petwell/posts'
-      });
+      const result = await cloudinary.v2.uploader.upload(image, { folder: 'petwell/posts' });
       imageUrl = result.secure_url;
     }
 
@@ -154,9 +150,12 @@ app.post("/api/posts", async (req, res) => {
 
     await newPost.save();
     const populatedPost = await Post.findById(newPost._id).populate("author", "name profilePicture");
-    res.status(201).json(populatedPost);
+
+    console.log("Returning post:", populatedPost);
+    res.status(201).json(populatedPost); // Send a proper JSON response
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    console.error("Error in post creation:", err.message);
+    res.status(400).json({ error: true, message: err.message }); // Always send valid JSON
   }
 });
 
