@@ -90,6 +90,8 @@ const corsOptions = {
     "http://localhost:3000", // React client origin
     "https://pet-7rbg.vercel.app",
     "https://5173-idx-hhhh-1745874672220.cluster-ancjwrkgr5dvux4qug5rbzyc2y.cloudworkstations.dev"
+    "https://5173-idx-hhhh-1745874672220.cluster-ancjwrkgr5dvux4qug5rbzyc2y.cloudworkstations.dev",
+    "https://9000-idx-hhhh-1745874672220.cluster-ancjwrkgr5dvux4qug5rbzyc2y.cloudworkstations.dev"
   ],
   methods: ["POST", "GET", "PUT", "DELETE"],
   credentials: true,
