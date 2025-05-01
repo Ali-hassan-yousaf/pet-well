@@ -1,72 +1,70 @@
 import express from "express";
 import cors from "cors";
 import 'dotenv/config';
-import connectDB from "./config/mongodb.js";
-import connectCloudinary from "./config/cloudinary.js";
-import userRouter from "./routes/userRoute.js";
-import barberRouter from "./routes/doctorRoute.js";
-import adminRouter from "./routes/adminRoute.js";
-import workerRouter from "./routes/workerRoute.js";
 import mongoose from "mongoose";
 import cloudinary from "cloudinary";
 
-const app = express();
-const port = process.env.PORT;
+// DB Connection
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log("Connected to MongoDB");
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    process.exit(1);
+  }
+};
 
-// Item Schema and Model (CRUD operations)
+// Cloudinary Config
+cloudinary.v2.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_API_KEY,
+  api_secret: process.env.CLOUD_API_SECRET,
+});
+
+// App Setup
+const app = express();
+const port = process.env.PORT || 5000;
+
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(cors({
+  origin: ["https://pet-well-6436.vercel.app"],
+  methods: ["POST", "GET", "PUT", "DELETE"],
+  credentials: true,
+}));
+
+// Item Schema
 const itemSchema = new mongoose.Schema({
   name: String,
   description: String,
   createdAt: { type: Date, default: Date.now }
 });
-
 const Item = mongoose.model('Item', itemSchema);
 
-// Post Schema and Model (Community Feature)
+// Post Schema
 const postSchema = new mongoose.Schema({
   title: String,
   content: String,
   imageUrl: String,
-  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  author: { type: String }, // simplified to string for now
+  likes: [String], // userId as string
   comments: [{
     text: String,
-    author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    author: String,
     createdAt: { type: Date, default: Date.now }
   }],
   createdAt: { type: Date, default: Date.now },
   status: { type: String, enum: ['pending', 'approved'], default: 'approved' }
 });
-
 const Post = mongoose.model('Post', postSchema);
 
-// CORS Configuration
-const corsOptions = {
-  origin: ["https://pet-well-6436.vercel.app"],
-  methods: ["POST", "GET", "PUT", "DELETE"],
-  credentials: true,
-};
+// API Endpoints
 
-// Service Connections
-const connectServices = async () => {
-  try {
-    await connectDB();
-    await connectCloudinary();
-    console.log("Connected to MongoDB and Cloudinary successfully");
-  } catch (error) {
-    console.error("Error connecting to services:", error);
-    process.exit(1);
-  }
-};
-
-connectServices();
-
-// Middlewares
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use(cors(corsOptions));
-
-// Existing CRUD Routes for Items
+// Item CRUD
 app.post("/api/items", async (req, res) => {
   try {
     const newItem = new Item(req.body);
@@ -120,23 +118,14 @@ app.delete("/api/items/:id", async (req, res) => {
   }
 });
 
-// HARDCODED fallback User ObjectId for testing
-const HARDCODED_USER_ID = "661f84e192a3fcd27d7a1234"; // replace with a real User._id from your DB
-
-// New Community Post Routes
+// Community Post APIs
 app.post("/api/posts", async (req, res) => {
   try {
-    let { title, content, author } = req.body;
+    const { title, content, author, image } = req.body;
     let imageUrl = '';
 
-    // Fallback if author is missing or invalid
-    if (!mongoose.Types.ObjectId.isValid(author)) {
-      console.warn("⚠️ Invalid author ID provided. Using fallback test user ID.");
-      author = HARDCODED_USER_ID;
-    }
-
-    if (req.body.image) {
-      const result = await cloudinary.uploader.upload(req.body.image, {
+    if (image) {
+      const result = await cloudinary.v2.uploader.upload(image, {
         folder: 'petwell/posts'
       });
       imageUrl = result.secure_url;
@@ -150,7 +139,7 @@ app.post("/api/posts", async (req, res) => {
     });
 
     await newPost.save();
-    res.status(201).json(await newPost.populate('author', 'name profilePicture'));
+    res.status(201).json(newPost);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -158,9 +147,7 @@ app.post("/api/posts", async (req, res) => {
 
 app.get("/api/posts", async (req, res) => {
   try {
-    const posts = await Post.find({ status: 'approved' })
-      .populate('author', 'name profilePicture')
-      .sort({ createdAt: -1 });
+    const posts = await Post.find({ status: 'approved' }).sort({ createdAt: -1 });
     res.json(posts);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -173,7 +160,7 @@ app.patch("/api/posts/:id/like", async (req, res) => {
     const userId = req.body.userId;
 
     if (!post) return res.status(404).json({ message: 'Post not found' });
-    
+
     const index = post.likes.indexOf(userId);
     if (index === -1) {
       post.likes.push(userId);
@@ -188,16 +175,14 @@ app.patch("/api/posts/:id/like", async (req, res) => {
   }
 });
 
-// Existing Routes
-app.use("/api/user", userRouter);
-app.use("/api/admin", adminRouter);
-app.use("/api/doctor", barberRouter);
-app.use("/api/worker", workerRouter);
-
+// Default Route
 app.get("/", (req, res) => {
   res.send("API Working");
 });
 
-app.listen(port, () => {
-  console.log(`Server started on PORT:${port}`);
+// Start Server
+connectDB().then(() => {
+  app.listen(port, () => {
+    console.log(`Server started on PORT: ${port}`);
+  });
 });
