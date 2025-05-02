@@ -89,7 +89,8 @@ let items = [];
 const corsOptions = {
   origin: [
     "https://5173-idx-hhhh-1745874672220.cluster-ancjwrkgr5dvux4qug5rbzyc2y.cloudworkstations.dev",  
-    "https://pet-7rbg.vercel.app"
+    "https://pet-7rbg.vercel.app",
+    "https://5174-idx-hhhh-1745874672220.cluster-ancjwrkgr5dvux4qug5rbzyc2y.cloudworkstations.dev"
   ],
   methods: ["POST", "GET", "PUT", "DELETE"],
   credentials: true,
