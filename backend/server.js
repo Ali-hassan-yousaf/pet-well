@@ -121,7 +121,7 @@ app.use("/api/admin", adminRouter); // Admin routes
 app.use("/api/doctor", barberRouter); 
 app.use("/api/worker", workerRouter); // Worker routes
 
-app.use('/api', apiRoutes);
+// app.use('/api', apiRoutes);
 
 
 // Items routes
