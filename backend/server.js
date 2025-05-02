@@ -88,7 +88,7 @@ let items = [];
 // // Allowing multiple origins in CORS configuration
 const corsOptions = {
   origin: [
-    "https://5173-idx-hhhh-1745874672220.cluster-ancjwrkgr5dvux4qug5rbzyc2y.cloudworkstations.dev,  
+    "https://5173-idx-hhhh-1745874672220.cluster-ancjwrkgr5dvux4qug5rbzyc2y.cloudworkstations.dev",  
     "https://pet-7rbg.vercel.app"
   ],
   methods: ["POST", "GET", "PUT", "DELETE"],
