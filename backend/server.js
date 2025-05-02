@@ -85,17 +85,16 @@ const port = process.env.PORT || 5000;
 let items = [];
 
 // // Allowing multiple origins in CORS configuration
-// const corsOptions = {
-//   origin: [
+const corsOptions = {
+  origin: [
   
-//     "https://pet-7rbg.vercel.app"
-//   ],
-//   methods: ["POST", "GET", "PUT", "DELETE"],
-//   credentials: true,
-// };
+    "https://pet-7rbg.vercel.app"
+  ],
+  methods: ["POST", "GET", "PUT", "DELETE"],
+  credentials: true,
+};
 
-// Handle preflight requests for all routes
-app.options('*', cors());
+
 
 
 // Connect to MongoDB and Cloudinary with error handling
