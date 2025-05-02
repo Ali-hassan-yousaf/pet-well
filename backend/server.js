@@ -84,15 +84,19 @@ const port = process.env.PORT || 5000;
 // In-memory storage for demonstration
 let items = [];
 
-// Allowing multiple origins in CORS configuration
-const corsOptions = {
-  origin: [
+// // Allowing multiple origins in CORS configuration
+// const corsOptions = {
+//   origin: [
   
-    "https://pet-7rbg.vercel.app"
-  ],
-  methods: ["POST", "GET", "PUT", "DELETE"],
-  credentials: true,
-};
+//     "https://pet-7rbg.vercel.app"
+//   ],
+//   methods: ["POST", "GET", "PUT", "DELETE"],
+//   credentials: true,
+// };
+
+// Handle preflight requests for all routes
+app.options('*', cors());
+
 
 // Connect to MongoDB and Cloudinary with error handling
 const connectServices = async () => {
@@ -117,6 +121,9 @@ app.use("/api/user", userRouter); // User routes
 app.use("/api/admin", adminRouter); // Admin routes
 app.use("/api/doctor", barberRouter); 
 app.use("/api/worker", workerRouter); // Worker routes
+
+app.use('/api', apiRoutes);
+
 
 // Items routes
 app.post("/api/items", (req, res) => {
