@@ -1,180 +1,80 @@
-
-// import express from "express";
-// import Worker from "../models/worker.js";
-
-// const router = express.Router();
-
-// // Get all workers (filter by shopname if provided)
-// router.get("/", async (req, res) => {
-//   const { shopname } = req.query; // Optional query parameter to filter by shopname
-
-//   try {
-//     const filter = shopname ? { shopname } : {};
-//     const workers = await Worker.find(filter);
-//     res.status(200).json(workers);
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// });
-
-// // Add a new worker with shopname
-// router.post("/", async (req, res) => {
-//   const { shopname, name, slot, date } = req.body;
-
-//   try {
-//     // Check if the slot is already booked for this date
-//     const existingSlot = await Worker.findOne({ shopname, date, slot });
-
-//     if (existingSlot) {
-//       return res
-//         .status(400)
-//         .json({ message: `Slot ${slot} is already booked on ${date} for shop ${shopname}` });
-//     }
-
-//     const newWorker = new Worker({ shopname, name, slot, date });
-//     await newWorker.save();
-//     res.status(201).json(newWorker);
-//   } catch (error) {
-//     res.status(400).json({ message: error.message });
-//   }
-// });
-
-// // Update a worker's slot
-// router.put("/:id", async (req, res) => {
-//   const { id } = req.params;
-//   const { shopname, name, slot, date } = req.body;
-
-//   try {
-//     // Check if the new slot is already booked for this date
-//     const existingSlot = await Worker.findOne({ shopname, date, slot, _id: { $ne: id } });
-
-//     if (existingSlot) {
-//       return res
-//         .status(400)
-//         .json({ message: `Slot ${slot} is already booked on ${date} for shop ${shopname}` });
-//     }
-
-//     const updatedWorker = await Worker.findByIdAndUpdate(
-//       id,
-//       { shopname, name, slot, date },
-//       { new: true }
-//     );
-
-//     if (!updatedWorker) {
-//       return res.status(404).json({ message: "Worker not found" });
-//     }
-
-//     res.status(200).json(updatedWorker);
-//   } catch (error) {
-//     res.status(400).json({ message: error.message });
-//   }
-// });
-
-// // Get available slots for a specific shop on a specific date
-// router.get("/:shopname/slots", async (req, res) => {
-//   const { shopname } = req.params;
-//   const { date } = req.query; // Date passed as a query parameter
-
-//   try {
-//     // Define all possible slots (example slots)
-//     const allSlots = ["09:00 am", "10:00 am", "11:00 am", "12:00 pm", "01:00 pm"];
-
-//     // Find booked slots for the shop on the specified date
-//     const bookedSlots = await Worker.find({ shopname, date }).select("slot -_id");
-//     const bookedSlotList = bookedSlots.map((s) => s.slot);
-
-//     // Filter available slots
-//     const availableSlots = allSlots.filter((slot) => !bookedSlotList.includes(slot));
-
-//     res.status(200).json({ availableSlots });
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// });
-
-// // Delete a worker
-// router.delete("/:id", async (req, res) => {
-//   const { id } = req.params;
-
-//   try {
-//     const deletedWorker = await Worker.findByIdAndDelete(id);
-
-//     if (!deletedWorker) {
-//       return res.status(404).json({ message: "Worker not found" });
-//     }
-
-//     res.status(200).json({ message: "Worker deleted successfully" });
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// });
-
-// export default router;
-
-
-
 import express from "express";
-import Post from "../models/post.js"; // Ensure you have a corresponding model
+import Worker from "../models/worker.js";
 
 const router = express.Router();
 
-// Get all posts
+// Get all workers (filter by title if provided)
 router.get("/", async (req, res) => {
+  const { title } = req.query; // Optional query parameter to filter by title
+
   try {
-    const posts = await Post.find();
-    res.status(200).json(posts);
+    const filter = title ? { title } : {};
+    const workers = await Worker.find(filter);
+    res.status(200).json(workers);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Add a new post
+// Add a new worker with title, description, and post date
 router.post("/", async (req, res) => {
   const { title, description, postDate } = req.body;
 
   try {
-    const newPost = new Post({ title, description, postDate });
-    await newPost.save();
-    res.status(201).json(newPost);
+    const newWorker = new Worker({ title, description, postDate });
+    await newWorker.save();
+    res.status(201).json(newWorker);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
 
-// Update a post
+// Update a worker's title, description, or post date
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
   const { title, description, postDate } = req.body;
 
   try {
-    const updatedPost = await Post.findByIdAndUpdate(
+    const updatedWorker = await Worker.findByIdAndUpdate(
       id,
       { title, description, postDate },
       { new: true }
     );
 
-    if (!updatedPost) {
-      return res.status(404).json({ message: "Post not found" });
+    if (!updatedWorker) {
+      return res.status(404).json({ message: "Worker not found" });
     }
 
-    res.status(200).json(updatedPost);
+    res.status(200).json(updatedWorker);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
 
-// Delete a post
+// Get workers by a specific post date
+router.get("/date", async (req, res) => {
+  const { postDate } = req.query; // Date passed as a query parameter
+
+  try {
+    const workers = await Worker.find({ postDate });
+    res.status(200).json(workers);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Delete a worker
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    const deletedPost = await Post.findByIdAndDelete(id);
+    const deletedWorker = await Worker.findByIdAndDelete(id);
 
-    if (!deletedPost) {
-      return res.status(404).json({ message: "Post not found" });
+    if (!deletedWorker) {
+      return res.status(404).json({ message: "Worker not found" });
     }
 
-    res.status(200).json({ message: "Post deleted successfully" });
+    res.status(200).json({ message: "Worker deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
