@@ -77,6 +77,7 @@ import userRouter from "./routes/userRoute.js";
 import barberRouter from "./routes/doctorRoute.js";
 import adminRouter from "./routes/adminRoute.js";
 import workerRouter from "./routes/workerRoute.js";
+import postschema from "./routes/api.js";
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -120,6 +121,8 @@ app.use("/api/user", userRouter); // User routes
 app.use("/api/admin", adminRouter); // Admin routes
 app.use("/api/doctor", barberRouter); 
 app.use("/api/worker", workerRouter); // Worker routes
+app.use("/api/posts", postRoutes); // Worker routes
+
 
 // app.use('/api', apiRoutes);
 
