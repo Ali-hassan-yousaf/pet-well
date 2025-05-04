@@ -2,10 +2,10 @@
 import mongoose from 'mongoose';
 
 const workerSchema = new mongoose.Schema({
-  shopname: { type: String, required: true },
-  name: { type: String, required: true },
-  slot: { type: String, required: true },
-  date: { type: String, required: true },
+  shopname: { type: String, required: false },
+  name: { type: String, required: false },
+  slot: { type: String, required: false },
+  date: { type: String, required: false },
   title: { type: String },
   description: { type: String },
   image: { type: String },
