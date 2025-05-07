@@ -269,7 +269,7 @@ const addD = async (req, res) => {
         });
 
         await newD.save();
-        res.json({ success: true, message: "Saloon added successfully!" });
+        res.json({ success: true, message: "added successfully!" });
     } catch (error) {
      res.json({ success: false, message: error.message });
 
