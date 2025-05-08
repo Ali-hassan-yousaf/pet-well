@@ -224,12 +224,71 @@ const appointmentCancel = async (req, res) => {
 
 
 
+// const addD = async (req, res) => {
+//     try {
+//         const { name, email, password, speciality, degree, experience, about, fees, address, services,workers } = req.body;
+//         const imageFile = req.file;
+
+//         if (!name || !email || !password || !speciality || !experience || !about || !fees || !address|| !services|| !services.length===0||!workers) {
+//             return res.json({ success: false, message: "Missing Details" });
+//         }
+
+//         if (!validator.isEmail(email)) {
+//             return res.json({ success: false, message: "Please enter a valid email" });
+//         }
+
+//         if (password.length < 8) {
+//             return res.json({ success: false, message: "Please enter a strong password" });
+//         }
+
+//         const existingD = await dModel.findOne({ email });
+//         if (existingD) {
+//             return res.json({ success: false, message: "Email already exists" });
+//         }
+        
+//         const salt = await bcrypt.genSalt(10);
+//         const hashedPassword = await bcrypt.hash(password, salt);
+
+//         const imageUpload = await cloudinary.uploader.upload(imageFile.path, { resource_type: "image" });
+//         const imageUrl = imageUpload.secure_url;
+
+//         const newD = new dModel({
+//             name,
+//             email,
+//             image: imageUrl,
+//             password: hashedPassword,
+//             speciality,
+//             degree,
+//             experience,
+//             about,
+//             fees,
+//             address: JSON.parse(address),
+//             services: JSON.parse(services),
+//             workers: JSON.parse(workers),
+//             date: Date.now(),
+//         });
+
+//         await newD.save();
+//         res.json({ success: true, message: "added successfully!" });
+//     } catch (error) {
+//      res.json({ success: false, message: error.message });
+
+// }
+// };
+
+// export default addD;
+
+
+
+
+
+
 const addD = async (req, res) => {
     try {
-        const { name, email, password, speciality, degree, experience, about, fees, address, services,workers } = req.body;
+        const { name, email, password, speciality, degree, experience, about, fees, address, services, workers } = req.body;
         const imageFile = req.file;
 
-        if (!name || !email || !password || !speciality || !experience || !about || !fees || !address|| !services|| !services.length===0||!workers) {
+        if (!name || !email || !password || !speciality || !experience || !about || !fees || !address || !services || !services.length === 0 || !workers) {
             return res.json({ success: false, message: "Missing Details" });
         }
 
@@ -271,12 +330,13 @@ const addD = async (req, res) => {
         await newD.save();
         res.json({ success: true, message: "added successfully!" });
     } catch (error) {
-     res.json({ success: false, message: error.message });
-
-}
+        res.json({ success: false, message: error.message });
+    }
 };
 
 export default addD;
+
+
 
 // API to get all Saloon list for admin panel
 const allD = async (req, res) => {
