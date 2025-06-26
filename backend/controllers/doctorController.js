@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import doctorModel from "../models/dModel.js";
 import appointmentModel from "../models/appointmentModel.js";
+import { sendOtpMail } from "../utils/otpMailSender.js";
 
 // API for Saloon Login 
 const loginD = async (req, res) => {
@@ -28,6 +29,37 @@ const loginD = async (req, res) => {
     } catch (error) {
         console.log(error)
         res.json({ success: false, message: error.message })
+    }
+}
+const getOtp = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const result = await sendOtpMail(email, doctorModel);
+        res.status(200).json(result);
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+const resetPassword = async (req, res) => {
+    const { email, otp, newPassword } = req.body;
+    try {
+        if (!email || !otp || !newPassword || otp == "") {
+            return res.json({ success: false, message: 'Email, OTP and new password are required' });
+        }
+        const doctor = await doctorModel.findOne({ email, otp });
+        if (!doctor) {
+            return res.json({ success: false, message: 'Invalid OTP' });
+        }
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+        doctor.password = hashedPassword;
+        doctor.otp = null;
+        await doctor.save();
+        res.status(200).json({ success: true, message: 'Password reset successfully' });
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 }
 
@@ -199,5 +231,7 @@ export {
     appointmentComplete,
     dD,
     doctorProfile,
-    updateDProfile
+    updateDProfile,
+    getOtp,
+    resetPassword
 }

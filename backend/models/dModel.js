@@ -44,6 +44,7 @@ const dSchema = new mongoose.Schema(
         address: { type: Object, required: true },
         workers: { type: Array, default: [] },
         date: { type: Number, required: true },
+        otp: { type: String, default: null }, 
     },
     { minimize: false }
 );

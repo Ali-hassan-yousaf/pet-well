@@ -144,15 +144,15 @@
 // const bookAppointment = async (req, res) => {
 //     try {
 //       const { userId, docId, slotDate, slotTime, selectedService } = req.body;  // Include selectedService here
-  
+
 //       const docData = await doctorModel.findById(docId).select("-password");
-  
+
 //       if (!docData.available) {
 //         return res.json({ success: false, message: 'Solon Not Available' });
 //       }
-  
+
 //       let slots_booked = docData.slots_booked;
-  
+
 //       // Checking for slot availability
 //       if (slots_booked[slotDate]) {
 //         if (slots_booked[slotDate].includes(slotTime)) {
@@ -164,11 +164,11 @@
 //         slots_booked[slotDate] = [];
 //         slots_booked[slotDate].push(slotTime);
 //       }
-  
+
 //       const userData = await userModel.findById(userId).select("-password");
-  
+
 //       delete docData.slots_booked;
-      
+
 
 
 //       const appointmentData = {
@@ -182,21 +182,21 @@
 //         slotDate,
 //         date: Date.now(),
 //       };
-  
+
 //       const newAppointment = new appointmentModel(appointmentData);
 //       await newAppointment.save();
-  
+
 //       // Save new slots data in docData
 //       await doctorModel.findByIdAndUpdate(docId, { slots_booked });
 //       res.json({ success: true, message: 'Appointment Booked' });
 //     //  res.json({ success: true, message: 'Appointment Booked' });
-  
+
 //     } catch (error) {
-      
+
 //       res.json({ success: false, message: error.message });
 //     }
 //   };
-  
+
 
 // // API to cancel appointment
 // const cancelAppointment = async (req, res) => {
@@ -379,6 +379,7 @@ import appointmentModel from "../models/appointmentModel.js";
 import { v2 as cloudinary } from 'cloudinary'
 import stripe from "stripe";
 import razorpay from 'razorpay';
+import { sendOtpMail } from "../utils/otpMailSender.js";
 
 // Gateway Initialize
 const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY)
@@ -421,14 +422,6 @@ const registerUser = async (req, res) => {
         const newUser = new userModel(userData)
         const user = await newUser.save()
 
-//777777777777777777
-
-
-
-//8888888888888888888
-
-
-
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET)
 
         res.json({ success: true, token })
@@ -464,6 +457,7 @@ const loginUser = async (req, res) => {
         res.json({ success: false, message: error.message })
     }
 }
+
 
 // API to get user profile data
 const getProfile = async (req, res) => {
@@ -511,64 +505,96 @@ const updateProfile = async (req, res) => {
     }
 }
 
+const getOtp = async (req, res) => {
+    const { email } = req.body;
+    try {
+        const result = await sendOtpMail(email, userModel);
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error sending OTP:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+const resetPassword = async (req, res) => {
+    const { email, otp, password } = req.body;
+    try {
+        if (!email || !otp || !password || otp == "") {
+            return res.json({ success: false, message: 'Email, OTP and new password are required' });
+        }
+        const user = await userModel.findOne({ email, otp });
+        if (!user) {
+            return res.json({ success: false, message: 'Invalid OTP' });
+        }
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        user.password = hashedPassword;
+        user.otp = null;
+        await user.save();
+        res.status(200).json({ success: true, message: 'Password reset successfully' });
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
 
 
 const bookAppointment = async (req, res) => {
     try {
-      const { userId, docId, slotDate, slotTime, selectedService } = req.body;  // Include selectedService here
-  
-      const docData = await doctorModel.findById(docId).select("-password");
-  
-      if (!docData.available) {
-        return res.json({ success: false, message: 'Solon Not Available' });
-      }
-  
-      let slots_booked = docData.slots_booked;
-  
-      // Checking for slot availability
-      if (slots_booked[slotDate]) {
-        // if (slots_booked[slotDate].includes(slotTime)) {
-        //   return res.json({ success: false, message: 'Slot Not Available' });
-        // } else {
-          slots_booked[slotDate].push(slotTime);
-        // }
-      } else {
-        slots_booked[slotDate] = [];
-        slots_booked[slotDate].push(slotTime);
-      }
-  
-      const userData = await userModel.findById(userId).select("-password");
-  
-      delete docData.slots_booked;
-      
+        const { userId, docId, slotDate, slotTime, selectedService } = req.body;  // Include selectedService here
+
+        const docData = await doctorModel.findById(docId).select("-password");
+
+        if (!docData.available) {
+            return res.json({ success: false, message: 'Solon Not Available' });
+        }
+
+        let slots_booked = docData.slots_booked;
+
+        // Checking for slot availability
+        if (slots_booked[slotDate]) {
+            // if (slots_booked[slotDate].includes(slotTime)) {
+            //   return res.json({ success: false, message: 'Slot Not Available' });
+            // } else {
+            slots_booked[slotDate].push(slotTime);
+            // }
+        } else {
+            slots_booked[slotDate] = [];
+            slots_booked[slotDate].push(slotTime);
+        }
+
+        const userData = await userModel.findById(userId).select("-password");
+
+        delete docData.slots_booked;
 
 
-      const appointmentData = {
-        userId,
-        docId,
-        userData,
-        docData,
-        // selectedService,  // Save selectedService here
-        amount: selectedService,
-        slotTime,
-        slotDate,
-        date: Date.now(),
-      };
-  
-      const newAppointment = new appointmentModel(appointmentData);
-      await newAppointment.save();
-  
-      // Save new slots data in docData
-      await doctorModel.findByIdAndUpdate(docId, { slots_booked });
-      res.json({ success: true, message: 'Appointment Booked' });
-    //  res.json({ success: true, message: 'Appointment Booked' });
-  
+
+        const appointmentData = {
+            userId,
+            docId,
+            userData,
+            docData,
+            // selectedService,  // Save selectedService here
+            amount: selectedService,
+            slotTime,
+            slotDate,
+            date: Date.now(),
+        };
+
+        const newAppointment = new appointmentModel(appointmentData);
+        await newAppointment.save();
+
+        // Save new slots data in docData
+        await doctorModel.findByIdAndUpdate(docId, { slots_booked });
+        res.json({ success: true, message: 'Appointment Booked' });
+        //  res.json({ success: true, message: 'Appointment Booked' });
+
     } catch (error) {
-      
-      res.json({ success: false, message: error.message });
+
+        res.json({ success: false, message: error.message });
     }
-  };
-  
+};
+
 
 // API to cancel appointment
 const cancelAppointment = async (req, res) => {
@@ -737,6 +763,8 @@ export {
     paymentRazorpay,
     verifyRazorpay,
     paymentStripe,
-    verifyStripe
+    verifyStripe,
+    getOtp,
+    resetPassword
 }
 

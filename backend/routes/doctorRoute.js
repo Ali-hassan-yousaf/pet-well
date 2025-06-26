@@ -1,9 +1,11 @@
 import express from 'express';
-import { loginD, appointmentsD, appointmentCancel, doctorList, changeAvailablity, appointmentComplete, dD, doctorProfile, updateDProfile } from '../controllers/doctorController.js';
+import { loginD, appointmentsD, appointmentCancel, doctorList, changeAvailablity, appointmentComplete, dD, doctorProfile, updateDProfile, getOtp, resetPassword } from '../controllers/doctorController.js';
 import authD from '../middleware/authD.js';
 const dRouter = express.Router();
 
 dRouter.post("/login", loginD)
+dRouter.post("/get-otp", getOtp);
+dRouter.post("/reset-password", resetPassword);
 dRouter.post("/cancel-appointment", authD, appointmentCancel)
 dRouter.get("/appointments", authD, appointmentsD)
 dRouter.get("/list", doctorList)
