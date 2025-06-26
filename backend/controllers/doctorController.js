@@ -137,7 +137,8 @@ const doctorProfile = async (req, res) => {
 const updateDProfile = async (req, res) => {
     try {
 
-        const { docId, fees, address, available } = req.body
+        const { docId, name, email, fees, address, about, available, speciality, degree, experience } = req.body
+
 
         await doctorModel.findByIdAndUpdate(docId, { fees, address, available })
 
